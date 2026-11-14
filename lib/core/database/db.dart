@@ -130,6 +130,21 @@ class Db extends _$Db {
     )..where((m) => m.profileId.equals(profileId))).go();
   }
 
+  Stream<List<Measurement>> watchRecent(
+    int profileId,
+    String metricId, {
+    int limit = 16,
+  }) {
+    return (select(measurements)
+          ..where(
+            (m) => m.profileId.equals(profileId) & m.metricId.equals(metricId),
+          )
+          ..orderBy([(m) => OrderingTerm.desc(m.takenAt)])
+          ..limit(limit))
+        .watch()
+        .map((rows) => rows.reversed.toList());
+  }
+
   Stream<Measurement?> watchLatest(int profileId, String metricId) {
     return (select(measurements)
           ..where(

@@ -55,6 +55,15 @@ class MetricDef {
   }
 
   String format(double? v) => v == null ? '–' : v.toStringAsFixed(decimals);
+
+  double roundValue(double v) {
+    if (decimals <= 0) return v.roundToDouble();
+    var scale = 1.0;
+    for (var i = 0; i < decimals; i++) {
+      scale *= 10;
+    }
+    return (v * scale).round() / scale;
+  }
 }
 
 const metrics = [

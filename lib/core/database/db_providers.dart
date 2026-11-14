@@ -30,6 +30,12 @@ final indicatorHistoryProvider = StreamProvider.autoDispose
       return db.watchAll(profileId, metricId);
     });
 
+final recentIndicatorHistoryProvider = StreamProvider.autoDispose
+    .family<List<Measurement>, String>((ref, metricId) {
+      final pid = ref.watch(activeProfileIdProvider);
+      return ref.watch(dbProvider).watchRecent(pid, metricId, limit: 16);
+    });
+
 final latestProvider = StreamProvider.autoDispose.family<Measurement?, String>((
   ref,
   metricId,

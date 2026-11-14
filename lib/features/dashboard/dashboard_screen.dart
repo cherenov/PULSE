@@ -4,6 +4,7 @@ import 'package:pulse/core/database/db.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/features/dashboard/widgets/health_category_card.dart';
+import 'package:pulse/features/indicators/indicator_group_screen.dart';
 import 'package:pulse/home_screen.dart';
 import 'package:pulse/theme/app_colors.dart';
 
@@ -131,9 +132,11 @@ class DashboardScreen extends ConsumerWidget {
                             ref
                                 .read(selectedMetricGroupProvider.notifier)
                                 .setGroup(category.group);
-                            ref
-                                .read(selectedIndexProvider.notifier)
-                                .setIndex(1);
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const IndicatorsGroupScreen(),
+                              ),
+                            );
                           },
                         ),
                       );

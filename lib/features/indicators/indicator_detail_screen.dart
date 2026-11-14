@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pulse/core/database/db.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
+import 'package:pulse/core/tts/status_announcer.dart';
+import 'package:pulse/core/tts/tts_provider.dart';
 import 'package:pulse/features/indicators/indicator_info.dart';
 import 'package:pulse/features/indicators/widgets/indicator_chart.dart';
 import 'package:pulse/features/indicators/widgets/indicator_history.dart';
@@ -98,6 +100,11 @@ class IndicatorDetailScreen extends ConsumerWidget {
 
                       return Column(
                         children: [
+                          _StatusAnnouncement(
+                            key: ValueKey(metric.id),
+                            metricTitle: metric.title,
+                            assessment: assessment,
+                          ),
                           _LatestMeasurementCard(
                             metric: metric,
                             measurement: measurement,
@@ -331,6 +338,58 @@ class _LatestMeasurementCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _StatusAnnouncement extends ConsumerStatefulWidget {
+  final String metricTitle;
+  final IndicatorAssessment assessment;
+
+  const _StatusAnnouncement({
+    super.key,
+    required this.metricTitle,
+    required this.assessment,
+  });
+
+  @override
+  ConsumerState<_StatusAnnouncement> createState() =>
+      _StatusAnnouncementState();
+}
+
+class _StatusAnnouncementState extends ConsumerState<_StatusAnnouncement> {
+  bool _announced = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _announce();
+  }
+
+  @override
+  void didUpdateWidget(_StatusAnnouncement oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.assessment.showWarning && widget.assessment.showWarning) {
+      _announce();
+    }
+  }
+
+  void _announce() {
+    if (_announced) return;
+    final text = StatusAnnouncer.forAssessment(
+      metricTitle: widget.metricTitle,
+      label: widget.assessment.label,
+      message: widget.assessment.message,
+      showWarning: widget.assessment.showWarning,
+    );
+    if (text == null) return;
+    _announced = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(ttsServiceProvider).speak(text);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 class _MessageCard extends StatelessWidget {

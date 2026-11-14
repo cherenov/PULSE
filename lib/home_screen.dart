@@ -1,8 +1,15 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pulse/common/models/nav_item.dart';
 import 'package:pulse/common/widgets/floating_bottom_nav_bar.dart';
+import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
+import 'package:pulse/core/risk_detector/risk_providers.dart';
+import 'package:pulse/core/tts/status_announcer.dart';
 import 'package:pulse/core/tts/tts_provider.dart';
 import 'package:pulse/features/add_metrics/add_record_screen.dart';
 import 'package:pulse/features/dashboard/dashboard_screen.dart';
@@ -33,76 +40,242 @@ final selectedMetricGroupProvider =
       SelectedMetricGroupNotifier.new,
     );
 
-final _welcomeTtsProvider = Provider<void>((ref) {
-  ref
-      .read(ttsServiceProvider)
-      .speak(
-        "Welcome to PULSE. WARNING: critical problem detected",
-        speechRate: 0.5,
-      );
-});
-
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
-  static final List<NavItem> _navItems = [
-    const NavItem(
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  static const _settingsIndex = 3;
+  static const _unlockTapCount = 5;
+
+  late final PageController _pageController;
+  bool _isAnimatingByTap = false;
+  bool _debugUnlocked = false;
+  bool _didWelcome = false;
+  int _settingsTaps = 0;
+  Timer? _settingsTapReset;
+
+  static const _mainItems = [
+    NavItem(
       screen: DashboardScreen(),
       icon: Icons.dashboard,
       label: 'Dashboard',
     ),
-    const NavItem(
+    NavItem(
       screen: IndicatorsGroupScreen(),
       icon: Icons.bar_chart_rounded,
       label: 'Metrics',
     ),
-    const NavItem(
+    NavItem(
       screen: AddRecordScreen(),
       icon: Icons.add_circle_outline,
       label: 'Add record',
     ),
-    const NavItem(
+    NavItem(
       screen: SettingsScreen(),
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings,
       label: 'Settings',
     ),
-    const NavItem(
-      screen: DebugScreen(),
-      icon: Icons.developer_mode_outlined,
-      selectedIcon: Icons.developer_mode,
-      label: 'Debug',
-    ),
   ];
 
-  void _onDestinationSelected(WidgetRef ref, int index) {
-    ref.read(selectedIndexProvider.notifier).setIndex(index);
-    final label = _navItems[index].label;
-    ref.read(ttsServiceProvider).speak(label);
+  static const _debugItem = NavItem(
+    screen: DebugScreen(),
+    icon: Icons.developer_mode_outlined,
+    selectedIcon: Icons.developer_mode,
+    label: 'Debug',
+  );
+
+  List<NavItem> get _navItems =>
+      _debugUnlocked ? [..._mainItems, _debugItem] : _mainItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(
+      initialPage: ref.read(selectedIndexProvider),
+    );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(_welcomeTtsProvider);
+  void dispose() {
+    _settingsTapReset?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
+  void _speakWelcomeIfNeeded() {
+    if (_didWelcome) return;
+    final latestAsync = ref.read(latestAllProvider);
+    final latest = latestAsync.asData?.value;
+    if (latest == null && !latestAsync.hasError) return;
+
+    _didWelcome = true;
+    final risks = ref.read(riskProvider);
+    ref
+        .read(ttsServiceProvider)
+        .speak(
+          StatusAnnouncer.welcome(latest: latest ?? const [], risks: risks),
+        );
+  }
+
+  void _unlockDebug() {
+    if (_debugUnlocked) return;
+    _settingsTaps = 0;
+    _settingsTapReset?.cancel();
+    HapticFeedback.mediumImpact();
+    setState(() => _debugUnlocked = true);
+    ref.read(ttsServiceProvider).speak('Debug mode enabled');
+    final debugIndex = _mainItems.length;
+    ref.read(selectedIndexProvider.notifier).setIndex(debugIndex);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(debugIndex);
+      }
+    });
+  }
+
+  void _lockDebug() {
+    if (!_debugUnlocked) return;
+    final current = ref.read(selectedIndexProvider);
+    if (current >= _mainItems.length) {
+      ref.read(selectedIndexProvider.notifier).setIndex(_settingsIndex);
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(_settingsIndex);
+      }
+    }
+    setState(() => _debugUnlocked = false);
+    ref.read(ttsServiceProvider).speak('Debug mode hidden');
+  }
+
+  Future<void> _onDestinationSelected(int index) async {
+    if (index == _settingsIndex && !_debugUnlocked) {
+      _settingsTaps++;
+      _settingsTapReset?.cancel();
+      _settingsTapReset = Timer(const Duration(seconds: 2), () {
+        _settingsTaps = 0;
+      });
+      if (_settingsTaps >= _unlockTapCount) {
+        _unlockDebug();
+        return;
+      }
+    } else {
+      _settingsTaps = 0;
+    }
+
+    final currentIndex = ref.read(selectedIndexProvider);
+    if (currentIndex == index) return;
+
+    ref.read(selectedIndexProvider.notifier).setIndex(index);
+
+    if (_pageController.hasClients) {
+      _isAnimatingByTap = true;
+      await _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      _isAnimatingByTap = false;
+    }
+  }
+
+  void _onDestinationLongPress(int index) {
+    if (index != _settingsIndex) return;
+    if (_debugUnlocked) {
+      _lockDebug();
+    } else {
+      _unlockDebug();
+    }
+  }
+
+  void _onPageChanged(int index) {
+    if (_isAnimatingByTap) return;
+    if (index >= _navItems.length) return;
+    ref.read(selectedIndexProvider.notifier).setIndex(index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedIndex = ref.watch(selectedIndexProvider);
+    final mediaQuery = MediaQuery.of(context);
+    final navItems = _navItems;
+    final safeIndex = selectedIndex.clamp(0, navItems.length - 1);
+
+    ref.listen(latestAllProvider, (previous, next) {
+      _speakWelcomeIfNeeded();
+    });
+    _speakWelcomeIfNeeded();
+
+    // Если индекс изменён программно извне, синхронизируем PageController
+    ref.listen<int>(selectedIndexProvider, (prev, next) {
+      if (_pageController.hasClients &&
+          _pageController.page?.round() != next &&
+          !_isAnimatingByTap &&
+          next < navItems.length) {
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutQuart,
+        );
+      }
+    });
 
     return Scaffold(
       extendBody: true,
       body: Stack(
         children: [
-          IndexedStack(
-            index: selectedIndex,
-            children: _navItems.map((item) => item.screen).toList(),
+          MediaQuery(
+            data: mediaQuery.copyWith(
+              gestureSettings: DeviceGestureSettings(
+                touchSlop:
+                    (mediaQuery.gestureSettings.touchSlop ?? kTouchSlop) * 3,
+              ),
+            ),
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              children: [
+                for (final item in navItems)
+                  MediaQuery(
+                    data: mediaQuery,
+                    child: _KeepAlivePage(child: item.screen),
+                  ),
+              ],
+            ),
           ),
           FloatingBottomNavBar(
-            items: _navItems,
-            selectedIndex: selectedIndex,
-            onDestinationSelected: (index) =>
-                _onDestinationSelected(ref, index),
+            items: navItems,
+            selectedIndex: safeIndex,
+            width: navItems.length > 4 ? 320 : 280,
+            onDestinationSelected: _onDestinationSelected,
+            onDestinationLongPress: _onDestinationLongPress,
           ),
         ],
       ),
     );
+  }
+}
+
+class _KeepAlivePage extends StatefulWidget {
+  const _KeepAlivePage({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

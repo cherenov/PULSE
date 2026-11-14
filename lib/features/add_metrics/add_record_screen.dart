@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
+import 'package:pulse/core/tts/status_announcer.dart';
+import 'package:pulse/core/tts/tts_provider.dart';
 
 extension on MetricGroup {
   String get label => switch (this) {
@@ -142,9 +144,18 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
             at: _when,
           );
       if (!mounted) return;
+      final status = _def.status(values);
+      ref
+          .read(ttsServiceProvider)
+          .speak(
+            StatusAnnouncer.forSavedRecord(
+              metricTitle: _def.title,
+              status: status,
+            ),
+          );
       setState(_resetFields);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved: ${_def.status(values).name}')),
+        SnackBar(content: Text('Saved: ${status.name}')),
       );
     } catch (e) {
       if (!mounted) return;

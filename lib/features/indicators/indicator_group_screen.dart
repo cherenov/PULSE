@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:pulse/core/database/db.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/features/indicators/indicator_detail_screen.dart';
@@ -12,24 +11,11 @@ import 'package:pulse/theme/app_colors.dart';
 class IndicatorsGroupScreen extends ConsumerWidget {
   const IndicatorsGroupScreen({super.key});
 
-  Map<String, Measurement> _latestOverall(List<Measurement> measurements) {
-    final result = <String, Measurement>{};
-
-    for (final measurement in measurements) {
-      final previous = result[measurement.metricId];
-
-      if (previous == null || measurement.takenAt.isAfter(previous.takenAt)) {
-        result[measurement.metricId] = measurement;
-      }
-    }
-
-    return result;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedGroup = ref.watch(selectedMetricGroupProvider);
-    final measurementsAsync = ref.watch(dbWatchProvider);
+    final measurementsAsync = ref.watch(latestAllProvider);
+    final canPop = Navigator.canPop(context);
 
     final currentMetrics = metrics
         .where((metric) => metric.group == selectedGroup)
@@ -49,138 +35,153 @@ class IndicatorsGroupScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: canPop
+            ? IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        titleSpacing: canPop ? 0 : 16,
+        title: const Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.monitor_heart_outlined,
-                        color: AppColors.textPrimary,
-                        size: 34,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'PULSE',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: 3,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _CategoryTab(
-                          label: 'Blood',
-                          selected: selectedGroup == MetricGroup.blood,
-                          onTap: () => selectGroup(MetricGroup.blood),
-                        ),
-                        const SizedBox(width: 9),
-                        _CategoryTab(
-                          label: 'Urine',
-                          selected: selectedGroup == MetricGroup.urine,
-                          onTap: () => selectGroup(MetricGroup.urine),
-                        ),
-                        const SizedBox(width: 9),
-                        _CategoryTab(
-                          label: 'Non-invasive',
-                          selected: selectedGroup == MetricGroup.trackers,
-                          onTap: () => selectGroup(MetricGroup.trackers),
-                        ),
-                        const SizedBox(width: 9),
-                        _CategoryTab(
-                          label: 'Eye health',
-                          selected: selectedGroup == MetricGroup.eyes,
-                          onTap: () => selectGroup(MetricGroup.eyes),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          groupTitle,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 21,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${currentMetrics.length} total',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                ],
-              ),
+            Icon(
+              Icons.monitor_heart_outlined,
+              color: AppColors.textPrimary,
+              size: 30,
             ),
-            Expanded(
-              child: measurementsAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.accent),
-                ),
-                error: (error, stackTrace) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'Unable to load measurements.\n$error',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                ),
-                data: (measurements) {
-                  final latestRecords = _latestOverall(measurements);
-
-                  return ListView.separated(
-                    key: ValueKey(selectedGroup),
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
-                    itemCount: currentMetrics.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 11),
-                    itemBuilder: (context, index) {
-                      final metric = currentMetrics[index];
-
-                      return IndicatorListTile(
-                        metric: metric,
-                        measurement: latestRecords[metric.id],
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  IndicatorDetailScreen(metricId: metric.id),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
+            SizedBox(width: 10),
+            Text(
+              'PULSE',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+                letterSpacing: 3,
               ),
             ),
           ],
         ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _CategoryTab(
+                        label: 'Blood',
+                        selected: selectedGroup == MetricGroup.blood,
+                        onTap: () => selectGroup(MetricGroup.blood),
+                      ),
+                      const SizedBox(width: 9),
+                      _CategoryTab(
+                        label: 'Urine',
+                        selected: selectedGroup == MetricGroup.urine,
+                        onTap: () => selectGroup(MetricGroup.urine),
+                      ),
+                      const SizedBox(width: 9),
+                      _CategoryTab(
+                        label: 'Non-invasive',
+                        selected: selectedGroup == MetricGroup.trackers,
+                        onTap: () => selectGroup(MetricGroup.trackers),
+                      ),
+                      const SizedBox(width: 9),
+                      _CategoryTab(
+                        label: 'Eye health',
+                        selected: selectedGroup == MetricGroup.eyes,
+                        onTap: () => selectGroup(MetricGroup.eyes),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        groupTitle,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${currentMetrics.length} total',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+              ],
+            ),
+          ),
+          Expanded(
+            child: measurementsAsync.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.accent),
+              ),
+              error: (error, stackTrace) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'Unable to load measurements.\n$error',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              ),
+              data: (latestList) {
+                final latestRecords = {
+                  for (final m in latestList) m.metricId: m,
+                };
+
+                return ListView.separated(
+                  key: ValueKey(selectedGroup),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                  itemCount: currentMetrics.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 11),
+                  itemBuilder: (context, index) {
+                    final metric = currentMetrics[index];
+
+                    return IndicatorListTile(
+                      metric: metric,
+                      measurement: latestRecords[metric.id],
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                IndicatorDetailScreen(metricId: metric.id),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

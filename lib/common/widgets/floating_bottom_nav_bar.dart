@@ -9,16 +9,18 @@ class FloatingBottomNavBar extends StatelessWidget {
     required this.items,
     required this.selectedIndex,
     required this.onDestinationSelected,
+    this.onDestinationLongPress,
     this.backgroundColor,
     this.selectedIconColor = AppColors.accent,
     this.unselectedIconColor = Colors.grey,
-    this.width = 320,
+    this.width = 280,
     this.height = 64,
   });
 
   final List<NavItem> items;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+  final ValueChanged<int>? onDestinationLongPress;
   final Color? backgroundColor;
   final Color selectedIconColor;
   final Color unselectedIconColor;
@@ -32,53 +34,68 @@ class FloatingBottomNavBar extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         child: Container(
           height: height,
+          width: width,
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: backgroundColor ?? Color(0xFF262727),
-            // border: Border.all(
-            //   color: backgroundColor ?? AppColors.textDisabled,
-            //   width: 2,
-            // ),
+            color: backgroundColor ?? const Color(0xFF262727),
             borderRadius: BorderRadius.circular(50),
           ),
-          child: NavigationBarTheme(
-            data: NavigationBarThemeData(
-              indicatorColor: Colors.transparent,
-              iconTheme: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return IconThemeData(
-                    color: selectedIconColor,
-                    size: AppSizes.xxl,
-                  );
-                }
-                return IconThemeData(
-                  color: unselectedIconColor,
-                  size: AppSizes.xxl,
-                );
-              }),
-            ),
-            child: SizedBox(
-              width: width,
-              child: NavigationBar(
-                selectedIndex: selectedIndex,
-                onDestinationSelected: onDestinationSelected,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-                destinations: items
-                    .map(
-                      (item) => NavigationDestination(
-                        icon: Icon(item.icon),
-                        selectedIcon: item.selectedIcon != null
-                            ? Icon(item.selectedIcon)
-                            : null,
-                        label: item.label,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
+          child: Row(
+            children: [
+              for (var i = 0; i < items.length; i++)
+                Expanded(
+                  child: _NavButton(
+                    item: items[i],
+                    selected: selectedIndex == i,
+                    selectedIconColor: selectedIconColor,
+                    unselectedIconColor: unselectedIconColor,
+                    onTap: () => onDestinationSelected(i),
+                    onLongPress: onDestinationLongPress == null
+                        ? null
+                        : () => onDestinationLongPress!(i),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  const _NavButton({
+    required this.item,
+    required this.selected,
+    required this.selectedIconColor,
+    required this.unselectedIconColor,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  final NavItem item;
+  final bool selected;
+  final Color selectedIconColor;
+  final Color unselectedIconColor;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Center(
+          child: Icon(
+            selected ? (item.selectedIcon ?? item.icon) : item.icon,
+            color: selected ? selectedIconColor : unselectedIconColor,
+            size: AppSizes.xxl,
           ),
         ),
       ),

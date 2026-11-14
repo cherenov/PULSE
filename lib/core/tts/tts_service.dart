@@ -6,19 +6,20 @@ import 'package:flutter_tts/flutter_tts.dart';
 class TtsService {
   final FlutterTts _tts = FlutterTts();
   bool _isInitialized = false;
-  bool _isInitializing = false;
-  double _defaultSpeechRate = 0.35;
+  Future<void>? _initFuture;
+  double _defaultSpeechRate = 0.5;
   double? _currentRate;
 
-  Future<void> init() async {
-    if (_isInitialized || _isInitializing) return;
-    _isInitializing = true;
+  Future<void> init() {
+    if (_isInitialized) return Future.value();
+    return _initFuture ??= _doInit();
+  }
 
+  Future<void> _doInit() async {
     try {
       await _tts.awaitSpeakCompletion(true);
       await _tts.setLanguage("en-US");
       await _tts.setSpeechRate(_defaultSpeechRate);
-      // await _tts.setVolume(0.7);
       await _tts.setPitch(1);
 
       if (Platform.isIOS) {
@@ -30,9 +31,8 @@ class TtsService {
 
       _isInitialized = true;
     } catch (e) {
+      _initFuture = null;
       dev.log("[TtsService] Init failed: $e");
-    } finally {
-      _isInitializing = false;
     }
   }
 
@@ -42,7 +42,7 @@ class TtsService {
       await _tts.setSpeechRate(rate);
       _currentRate = rate;
     } catch (e) {
-      _currentRate = null; // стан невідомий, наступний speak встановить заново
+      _currentRate = null;
       rethrow;
     }
   }
@@ -52,10 +52,7 @@ class TtsService {
       throw ArgumentError.value(rate, 'rate', 'Must be between 0.0 and 1.0');
     }
 
-    if (!_isInitialized) {
-      await init();
-    }
-
+    await init();
     if (!_isInitialized) {
       dev.log(
         '[TtsService] Engine not available, skipping setDefaultSpeechRate.',
@@ -83,10 +80,7 @@ class TtsService {
       );
     }
 
-    if (!_isInitialized) {
-      await init();
-    }
-
+    await init();
     if (!_isInitialized) {
       dev.log('[TtsService] Engine not available, skipping speak.');
       return;

@@ -344,7 +344,7 @@ class _IndicatorChartState extends ConsumerState<IndicatorChart> {
       records.map((m) {
         final days =
             m.takenAt.difference(from).inSeconds / Duration.secondsPerDay;
-        return FlSpot(days, m.values[selectedField]!);
+        return FlSpot(days, metric.roundValue(m.values[selectedField]!));
       }).toList(),
     );
 
@@ -441,6 +441,30 @@ class _IndicatorChartState extends ConsumerState<IndicatorChart> {
                     FlLine(color: AppColors.border, strokeWidth: 1),
               ),
               borderData: FlBorderData(show: false),
+              lineTouchData: LineTouchData(
+                handleBuiltInTouches: true,
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipColor: (_) => AppColors.surfaceHigh,
+                  fitInsideHorizontally: true,
+                  fitInsideVertically: true,
+                  getTooltipItems: (touchedSpots) {
+                    return [
+                      for (var i = 0; i < touchedSpots.length; i++)
+                        if (i == 0)
+                          LineTooltipItem(
+                            '${metric.format(touchedSpots[i].y)} ${metric.unit}',
+                            const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          )
+                        else
+                          null,
+                    ];
+                  },
+                ),
+              ),
               titlesData: const FlTitlesData(
                 topTitles: AxisTitles(
                   sideTitles: SideTitles(showTitles: false),

@@ -184,9 +184,8 @@ class TelemetryGenerator {
   double _clampAndRound(MetricDef metric, int fieldIdx, double value) {
     final minVal = metric.limits[fieldIdx][0];
     final maxVal = metric.limits[fieldIdx][1];
-    final clamped = value.clamp(minVal, maxVal);
-    final factor = pow(10, metric.decimals);
-    return (clamped * factor).round() / factor;
+    final clamped = value.clamp(minVal, maxVal).toDouble();
+    return metric.roundValue(clamped);
   }
 
   double _lerp(double min, double max) {
