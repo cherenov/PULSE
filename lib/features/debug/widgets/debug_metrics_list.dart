@@ -9,7 +9,7 @@ import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/theme/app_colors.dart';
 
 class DebugMetricsList extends ConsumerWidget {
-  const DebugMetricsList({super.key}); // Виправлено назву конструктора
+  const DebugMetricsList({super.key});
 
   Future<void> _refresh(WidgetRef ref) async {
     ref.invalidate(dbWatchProvider);
@@ -221,13 +221,11 @@ class DebugMetricsList extends ConsumerWidget {
               );
             }
 
-            // 1. Групуємо записи за metricId
             final Map<String, List<Measurement>> byMetricId = {};
             for (final item in items) {
               byMetricId.putIfAbsent(item.metricId, () => []).add(item);
             }
 
-            // 2. Групуємо за MetricGroup
             final Map<MetricGroup?, Map<String, List<Measurement>>>
             groupedByGroup = {};
             for (final entry in byMetricId.entries) {
@@ -299,7 +297,7 @@ class DebugMetricsList extends ConsumerWidget {
                               leading: CircleAvatar(
                                 radius: 6,
                                 backgroundColor: latestStatus == null
-                                    ? Colors.grey
+                                    ? AppColors.textSecondary
                                     : getStatusColor(latestStatus),
                               ),
                               title: Text(
@@ -354,7 +352,7 @@ class DebugMetricsList extends ConsumerWidget {
                                       Icons.circle,
                                       size: 8,
                                       color: status == null
-                                          ? Colors.grey
+                                          ? AppColors.textSecondary
                                           : getStatusColor(status),
                                     ),
                                     title: Text(timeStr),

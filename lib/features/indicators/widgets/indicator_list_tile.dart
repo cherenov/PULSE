@@ -118,7 +118,6 @@ class IndicatorListTile extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              // Вертикальний індикатор статусу
               Container(
                 width: 6,
                 height: 51,
@@ -130,7 +129,6 @@ class IndicatorListTile extends ConsumerWidget {
 
               const SizedBox(width: 12),
 
-              // Назва показника та статус
               Expanded(
                 flex: 5,
                 child: Column(
@@ -177,7 +175,6 @@ class IndicatorListTile extends ConsumerWidget {
                 ),
               ),
 
-              // Міні-прев'ю графіка (спарклайн)
               if (hasData) ...[
                 const SizedBox(width: 8),
                 RepaintBoundary(

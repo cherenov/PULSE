@@ -42,8 +42,8 @@ String formatMeasurementDate(DateTime timestamp) {
 }
 
 Color statusColor(MetricStatus status) => switch (status) {
-  MetricStatus.ok => AppColors.accent,
-  MetricStatus.warning => const Color(0xFFF6CB55),
+  MetricStatus.ok => AppColors.ok,
+  MetricStatus.warning => AppColors.caution,
   MetricStatus.critical => AppColors.critical,
 };
 

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import 'package:pulse/theme/app_colors.dart';
 import 'package:pulse/theme/sizes.dart';
 
 class OrbitalRunScreen extends StatefulWidget {
@@ -294,11 +293,11 @@ class _OrbitalRunScreenState extends State<OrbitalRunScreen>
               enemy.x,
               enemy.y,
               enemy.heavy ? 18 : 11,
-              AppColors.critical,
+              _GameColors.critical,
             );
             HapticFeedback.selectionClick();
           } else {
-            _spawnExplosion(laser.x, laser.y, 4, AppColors.caution);
+            _spawnExplosion(laser.x, laser.y, 4, _GameColors.caution);
           }
           break;
         }
@@ -331,7 +330,7 @@ class _OrbitalRunScreenState extends State<OrbitalRunScreen>
       if (deltaX * deltaX + deltaY * deltaY <=
           combinedRadius * combinedRadius) {
         _enemies.removeAt(i);
-        _spawnExplosion(enemy.x, enemy.y, 16, AppColors.critical);
+        _spawnExplosion(enemy.x, enemy.y, 16, _GameColors.critical);
         _damagePlayer();
         break;
       }
@@ -342,7 +341,7 @@ class _OrbitalRunScreenState extends State<OrbitalRunScreen>
     _lives--;
     _invulnerable = 1.35;
     _shake = 1;
-    _spawnExplosion(_playerX, _playerY, 24, AppColors.info);
+    _spawnExplosion(_playerX, _playerY, 24, _GameColors.info);
 
     if (_lives <= 0) {
       _phase = _RunPhase.over;
@@ -574,7 +573,7 @@ class _RunPainter extends CustomPainter {
       Offset(size.width * 0.82, size.height * 0.2),
       size.width * 0.3,
       Paint()
-        ..color = AppColors.sleep.withValues(alpha: 0.035)
+        ..color = _GameColors.sleep.withValues(alpha: 0.035)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 45),
     );
 
@@ -623,7 +622,7 @@ class _RunPainter extends CustomPainter {
     for (final laser in lasers) {
       final x = laser.x * size.width;
       final y = laser.y * size.height;
-      final color = laser.isEnemy ? AppColors.critical : AppColors.accent;
+      final color = laser.isEnemy ? _GameColors.critical : _GameColors.accent;
       final length = (laser.isEnemy ? 14.0 : 20.0) * scale;
       final start = Offset(x, y - (laser.isEnemy ? length : 0));
       final end = Offset(x, y + (laser.isEnemy ? 0 : length));
@@ -659,7 +658,7 @@ class _RunPainter extends CustomPainter {
   void _drawEnemy(Canvas canvas, Size size, _Enemy enemy) {
     final center = Offset(enemy.x * size.width, enemy.y * size.height);
     final scale = _scaleFor(size) * (enemy.heavy ? 1.35 : 1.0);
-    final color = enemy.heavy ? AppColors.caution : AppColors.critical;
+    final color = enemy.heavy ? _GameColors.caution : _GameColors.critical;
     final alpha = enemy.heavy ? 0.65 + enemy.hp * 0.1 : 1.0;
 
     canvas.drawCircle(
@@ -682,7 +681,7 @@ class _RunPainter extends CustomPainter {
     canvas.drawPath(
       body,
       Paint()
-        ..color = AppColors.surfaceHigh.withValues(alpha: alpha)
+        ..color = _GameColors.surfaceHigh.withValues(alpha: alpha)
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
@@ -727,7 +726,7 @@ class _RunPainter extends CustomPainter {
       center.translate(0, 20 * scale),
       13 * scale,
       Paint()
-        ..color = AppColors.info.withValues(alpha: 0.26 * alpha)
+        ..color = _GameColors.info.withValues(alpha: 0.26 * alpha)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, 13 * scale),
     );
 
@@ -736,7 +735,7 @@ class _RunPainter extends CustomPainter {
         center,
         31 * scale,
         Paint()
-          ..color = AppColors.info.withValues(alpha: 0.3)
+          ..color = _GameColors.info.withValues(alpha: 0.3)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.4 * scale,
       );
@@ -754,13 +753,13 @@ class _RunPainter extends CustomPainter {
     canvas.drawPath(
       body,
       Paint()
-        ..color = AppColors.surfaceHigh.withValues(alpha: alpha)
+        ..color = _GameColors.surfaceHigh.withValues(alpha: alpha)
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
       body,
       Paint()
-        ..color = AppColors.info.withValues(alpha: alpha)
+        ..color = _GameColors.info.withValues(alpha: alpha)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.7 * scale
         ..strokeJoin = StrokeJoin.round,
@@ -768,7 +767,7 @@ class _RunPainter extends CustomPainter {
     canvas.drawPath(
       body,
       Paint()
-        ..color = AppColors.textPrimary.withValues(alpha: alpha * 0.8)
+        ..color = _GameColors.textPrimary.withValues(alpha: alpha * 0.8)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8 * scale
         ..strokeJoin = StrokeJoin.round,
@@ -777,7 +776,7 @@ class _RunPainter extends CustomPainter {
     canvas.drawCircle(
       center.translate(0, -4 * scale),
       3.4 * scale,
-      Paint()..color = AppColors.accent.withValues(alpha: alpha),
+      Paint()..color = _GameColors.accent.withValues(alpha: alpha),
     );
   }
 
@@ -825,9 +824,11 @@ class _Hud extends StatelessWidget {
             vertical: AppSizes.sm,
           ),
           decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.72),
+            color: _GameColors.surface.withValues(alpha: 0.72),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+            border: Border.all(
+              color: _GameColors.border.withValues(alpha: 0.8),
+            ),
           ),
           child: Row(
             children: [
@@ -840,7 +841,7 @@ class _Hud extends StatelessWidget {
                     Text(
                       'OFF-DUTY FLIGHT',
                       style: TextStyle(
-                        color: AppColors.accent,
+                        color: _GameColors.accent,
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.4,
@@ -850,7 +851,7 @@ class _Hud extends StatelessWidget {
                     Text(
                       'ORBITAL RUN',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: _GameColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2,
@@ -876,7 +877,7 @@ class _Hud extends StatelessWidget {
               child: _HudChip(
                 label: 'SCORE',
                 value: '$score',
-                valueColor: AppColors.accent,
+                valueColor: _GameColors.accent,
               ),
             ),
             const SizedBox(width: AppSizes.xs),
@@ -901,14 +902,14 @@ class _HudIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceHigh,
+      color: _GameColors.surfaceHigh,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          child: Icon(icon, size: 20, color: _GameColors.textPrimary),
         ),
       ),
     );
@@ -919,7 +920,7 @@ class _HudChip extends StatelessWidget {
   const _HudChip({
     required this.label,
     required this.value,
-    this.valueColor = AppColors.textPrimary,
+    this.valueColor = _GameColors.textPrimary,
   });
 
   final String label;
@@ -931,9 +932,9 @@ class _HudChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.68),
+        color: _GameColors.surface.withValues(alpha: 0.68),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.75)),
+        border: Border.all(color: _GameColors.border.withValues(alpha: 0.75)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -941,7 +942,7 @@ class _HudChip extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: AppColors.textSecondary,
+              color: _GameColors.textSecondary,
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.1,
@@ -974,9 +975,9 @@ class _HullChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.68),
+        color: _GameColors.surface.withValues(alpha: 0.68),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.75)),
+        border: Border.all(color: _GameColors.border.withValues(alpha: 0.75)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -984,7 +985,7 @@ class _HullChip extends StatelessWidget {
           const Text(
             'HULL',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: _GameColors.textSecondary,
               fontSize: 8,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.1,
@@ -998,7 +999,9 @@ class _HullChip extends StatelessWidget {
                 child: Icon(
                   Icons.shield_rounded,
                   size: 14,
-                  color: index < lives ? AppColors.ok : AppColors.textDisabled,
+                  color: index < lives
+                      ? _GameColors.ok
+                      : _GameColors.textDisabled,
                 ),
               );
             }),
@@ -1163,13 +1166,13 @@ class _GameOverlay extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSizes.xxl),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [AppColors.surfaceHigh, AppColors.surface],
+                    colors: [_GameColors.surfaceHigh, _GameColors.surface],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.28),
+                    color: _GameColors.accent.withValues(alpha: 0.28),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -1186,17 +1189,17 @@ class _GameOverlay extends StatelessWidget {
                       width: 58,
                       height: 58,
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.12),
+                        color: _GameColors.accent.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(icon, color: AppColors.accent, size: 30),
+                      child: Icon(icon, color: _GameColors.accent, size: 30),
                     ),
                     const SizedBox(height: AppSizes.lg),
                     Text(
                       eyebrow,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: AppColors.accent,
+                        color: _GameColors.accent,
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.5,
@@ -1207,7 +1210,7 @@ class _GameOverlay extends StatelessWidget {
                       title,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: AppColors.textPrimary,
+                        color: _GameColors.textPrimary,
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.4,
@@ -1218,7 +1221,7 @@ class _GameOverlay extends StatelessWidget {
                       message,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
+                        color: _GameColors.textSecondary,
                         fontSize: 13,
                         height: 1.5,
                       ),
@@ -1236,7 +1239,7 @@ class _GameOverlay extends StatelessWidget {
                         footer!,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: AppColors.textDisabled,
+                          color: _GameColors.textDisabled,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.7,
@@ -1270,13 +1273,13 @@ class _InstructionRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppColors.info, size: 17),
+        Icon(icon, color: _GameColors.info, size: 17),
         const SizedBox(width: AppSizes.sm),
         Expanded(
           child: Text(
             text,
             style: const TextStyle(
-              color: AppColors.textSecondary,
+              color: _GameColors.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
@@ -1305,8 +1308,8 @@ class _PrimaryButton extends StatelessWidget {
       icon: Icon(icon, size: 20),
       label: Text(label),
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.onAccent,
+        backgroundColor: _GameColors.accent,
+        foregroundColor: _GameColors.onAccent,
         minimumSize: const Size(0, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -1333,12 +1336,33 @@ class _SecondaryButton extends StatelessWidget {
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textSecondary,
-        side: const BorderSide(color: AppColors.border),
+        foregroundColor: _GameColors.textSecondary,
+        side: const BorderSide(color: _GameColors.border),
         minimumSize: const Size(0, 46),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
   }
+}
+
+/// The mini-game keeps its original colorful palette, independent of the
+/// app-wide monochrome AMOLED theme.
+abstract final class _GameColors {
+  static const surface = Color(0xFF17171C);
+  static const surfaceHigh = Color(0xFF22222A);
+  static const border = Color(0xFF2A2A33);
+
+  static const textPrimary = Color(0xFFFFFFFF);
+  static const textSecondary = Color(0xFF9A9AA8);
+  static const textDisabled = Color(0xFF5C5C68);
+
+  static const accent = Color(0xFFA9DB7A);
+  static const onAccent = Color(0xFF111111);
+
+  static const ok = Color(0xFFA9DB7A);
+  static const caution = Color(0xFFF6CB55);
+  static const critical = Color(0xFFE5646E);
+  static const info = Color(0xFF7AB8F5);
+  static const sleep = Color(0xFFA78BFA);
 }

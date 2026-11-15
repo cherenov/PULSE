@@ -30,22 +30,22 @@ class StatusAnnouncer {
       }
     }
 
-    final parts = <String>['Welcome to PULSE.'];
+    final parts = <String>['Welcome to PULSE, dear Astronaut.'];
 
-    if (critical == 0 && warning == 0) {
-      parts.add('All indicators are within normal range.');
-    } else {
-      if (critical > 0) {
-        parts.add(
-          'Warning. $critical critical ${critical == 1 ? 'indicator' : 'indicators'}.',
-        );
-      }
-      if (warning > 0) {
-        parts.add(
-          'Caution. $warning ${warning == 1 ? 'indicator needs' : 'indicators need'} review.',
-        );
-      }
+    // if (critical == 0 && warning == 0) {
+    //   parts.add('All indicators are within normal range.');
+    // } else {
+    if (critical > 0) {
+      parts.add(
+        'Warning. $critical critical ${critical == 1 ? 'indicator' : 'indicators'}.',
+      );
     }
+    if (warning > 0) {
+      parts.add(
+        'Caution. $warning ${warning == 1 ? 'indicator needs' : 'indicators need'} review.',
+      );
+    }
+    // }
 
     final confirmed = risks
         .where((r) => r.severity == RiskSeverity.confirmed)

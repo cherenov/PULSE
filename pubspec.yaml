@@ -27,7 +27,32 @@ dev_dependencies:
   riverpod_lint: ^3.1.9
   drift_dev: ^2.35.2
   build_runner: ^2.17.1
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.8
 
 flutter:
 
   uses-material-design: true
+  assets:
+    - assets/app-logo.jpg
+    - assets/brand/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/app-logo.jpg"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/app-logo.jpg"
+
+flutter_native_splash:
+  color: "#000000"
+  image: "assets/brand/splash_android12.png"
+  android: true
+  ios: true
+  web: false
+  android_12:
+    # Android 12+ masks the icon to a circle; this asset is padded to fit.
+    image: "assets/brand/splash_android12.png"
+    color: "#000000"
+    icon_background_color: "#000000"

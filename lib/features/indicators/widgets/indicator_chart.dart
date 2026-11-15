@@ -291,9 +291,25 @@ class _IndicatorChartState extends ConsumerState<IndicatorChart> {
 
     final activeSpots = smooth ? _smooth(focused.rawSpots) : focused.rawSpots;
     if (activeSpots.length > 1) {
+      // Zone segments are visual only: they contain synthetic threshold
+      // crossing points and would each produce their own touch indicator.
       final zoneBars = _zoneLines(metric, focused.index, activeSpots);
       bars.addAll(zoneBars);
-      barFields.addAll(List.filled(zoneBars.length, focused.index));
+      barFields.addAll(List.filled(zoneBars.length, -1));
+    }
+
+    // Single invisible bar over the real measurements handles all touches
+    // for the focused field (raw points lie on the smoothed curve too).
+    if (focused.rawSpots.isNotEmpty) {
+      bars.add(
+        LineChartBarData(
+          spots: focused.rawSpots,
+          color: Colors.transparent,
+          barWidth: 0,
+          dotData: const FlDotData(show: false),
+        ),
+      );
+      barFields.add(focused.index);
     }
 
     return LineChart(
@@ -368,6 +384,27 @@ class _IndicatorChartState extends ConsumerState<IndicatorChart> {
         lineTouchData: LineTouchData(
           handleBuiltInTouches: true,
           touchSpotThreshold: 32,
+          // fl_chart passes a copy of the bar (with showingIndicators set,
+          // possibly lerped), so bars are told apart by color rather than
+          // identity: transparent = focused touch bar, translucent = muted
+          // context line, opaque = visual-only zone segment.
+          getTouchedSpotIndicator: (barData, indexes) {
+            final alpha = barData.color?.a ?? 1;
+            if (alpha == 0) {
+              return [
+                for (final i in indexes)
+                  _focusedIndicator(
+                    statusColor(
+                      metric.fieldStatus(focused.index, barData.spots[i].y),
+                    ),
+                  ),
+              ];
+            }
+            if (alpha < 0.5) {
+              return defaultTouchedIndicators(barData, indexes);
+            }
+            return List<TouchedSpotIndicatorData?>.filled(indexes.length, null);
+          },
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => AppColors.surfaceHigh,
             maxContentWidth: 230,
@@ -478,7 +515,7 @@ class _IndicatorChartState extends ConsumerState<IndicatorChart> {
     }
 
     final fieldIndex = barFields[touched.barIndex];
-    if (!seen.add(fieldIndex)) return null;
+    if (fieldIndex < 0 || !seen.add(fieldIndex)) return null;
 
     _FieldSeries? field;
     for (final candidate in series) {
@@ -527,6 +564,20 @@ class _IndicatorChartState extends ConsumerState<IndicatorChart> {
             ),
           ),
       ],
+    );
+  }
+
+  TouchedSpotIndicatorData _focusedIndicator(Color color) {
+    return TouchedSpotIndicatorData(
+      FlLine(color: color.withValues(alpha: 0.6), strokeWidth: 2),
+      FlDotData(
+        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+          radius: 6,
+          color: color,
+          strokeWidth: 2,
+          strokeColor: AppColors.surfaceHigh,
+        ),
+      ),
     );
   }
 

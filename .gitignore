@@ -103,3 +103,7 @@ app.*.map.json
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
+# Remotion promo
+promo/node_modules/
+promo/out/
+promo/public/footage/

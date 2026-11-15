@@ -11,7 +11,7 @@ class FloatingVerticalNavBar extends StatelessWidget {
     required this.onDestinationSelected,
     this.backgroundColor,
     this.selectedIconColor = Colors.white,
-    this.unselectedIconColor = Colors.grey,
+    this.unselectedIconColor = AppColors.textDisabled,
     this.height = 320,
     this.width = 64,
   });

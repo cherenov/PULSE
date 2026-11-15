@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:pulse/common/widgets/pulse_logo.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/features/indicators/indicator_detail_screen.dart';
@@ -50,26 +51,7 @@ class IndicatorsGroupScreen extends ConsumerWidget {
               )
             : null,
         titleSpacing: canPop ? 0 : 16,
-        title: const Row(
-          children: [
-            Icon(
-              Icons.monitor_heart_outlined,
-              color: AppColors.textPrimary,
-              size: 30,
-            ),
-            SizedBox(width: 10),
-            Text(
-              'PULSE',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                fontStyle: FontStyle.italic,
-                letterSpacing: 3,
-              ),
-            ),
-          ],
-        ),
+        title: const PulseLogo(height: 24),
       ),
       body: Column(
         children: [

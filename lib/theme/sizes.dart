@@ -7,11 +7,9 @@ class AppSizes {
   static const xxl = 24.0;
   static const xxxl = 32.0;
 
-  // Радіуси
   static const radiusSm = 8.0;
   static const radiusMd = 12.0;
   static const radiusLg = 16.0;
 
-  // Для лептопа: макс. ширина контенту
   static const maxContentWidth = 1100.0;
 }
