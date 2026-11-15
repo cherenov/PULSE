@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pulse/features/settings/about_pulse_screen.dart';
+import 'package:pulse/features/settings/orbital_run_screen.dart';
 import 'package:pulse/theme/app_colors.dart';
 import 'package:pulse/theme/sizes.dart';
 
@@ -60,7 +61,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.xs),
                   const Text(
-                    'Profile, baselines and app preferences',
+                    'Profile, baselines, off-duty and app preferences',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -87,6 +88,54 @@ class SettingsScreen extends StatelessWidget {
                         icon: Icons.storage_outlined,
                         title: 'Data & sync',
                         subtitle: 'Offline mode, export and data sharing',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppSizes.xxl),
+
+                  // Off-duty heading
+                  const Text(
+                    'Off-duty',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSizes.sm),
+
+                  // Off-duty arcade break
+                  _SettingsCard(
+                    children: [
+                      _SettingsRow(
+                        icon: Icons.sports_esports_outlined,
+                        title: 'Orbital Run',
+                        subtitle: 'A short deep-space arcade break',
+                        trailing: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Play',
+                              style: TextStyle(
+                                color: AppColors.accent,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(width: AppSizes.xs),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const OrbitalRunScreen(),
+                          ),
+                        ),
                       ),
                     ],
                   ),

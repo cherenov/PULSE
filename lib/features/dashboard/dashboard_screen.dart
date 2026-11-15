@@ -85,6 +85,8 @@ class DashboardScreen extends ConsumerWidget {
                     spacing * (columns - 1)) /
                 columns;
 
+            if (cardWidth <= 0) return const SizedBox.shrink();
+
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 horizontalPadding,

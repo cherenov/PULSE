@@ -58,23 +58,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _settingsTaps = 0;
   Timer? _settingsTapReset;
 
-  static const _mainItems = [
-    NavItem(
+  List<NavItem> get _mainItems => [
+    const NavItem(
       screen: DashboardScreen(),
       icon: Icons.dashboard,
       label: 'Dashboard',
     ),
-    NavItem(
+    const NavItem(
       screen: IndicatorsGroupScreen(),
       icon: Icons.bar_chart_rounded,
       label: 'Metrics',
     ),
-    NavItem(
+    const NavItem(
       screen: AddRecordScreen(),
       icon: Icons.add_circle_outline,
       label: 'Add record',
     ),
-    NavItem(
+    const NavItem(
       screen: SettingsScreen(),
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings,
@@ -98,17 +98,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _pageController = PageController(
       initialPage: ref.read(selectedIndexProvider),
     );
-  }
-
-  @override
-  void dispose() {
-    _settingsTapReset?.cancel();
-    _pageController.dispose();
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _speakWelcomeIfNeeded(),
+    );
   }
 
   void _speakWelcomeIfNeeded() {
-    if (_didWelcome) return;
+    if (!mounted || _didWelcome) return;
     final latestAsync = ref.read(latestAllProvider);
     final latest = latestAsync.asData?.value;
     if (latest == null && !latestAsync.hasError) return;
@@ -120,6 +116,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .speak(
           StatusAnnouncer.welcome(latest: latest ?? const [], risks: risks),
         );
+  }
+
+  @override
+  void dispose() {
+    _settingsTapReset?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _unlockDebug() {
@@ -207,9 +210,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.listen(latestAllProvider, (previous, next) {
       _speakWelcomeIfNeeded();
     });
-    _speakWelcomeIfNeeded();
 
-    // Если индекс изменён программно извне, синхронизируем PageController
     ref.listen<int>(selectedIndexProvider, (prev, next) {
       if (_pageController.hasClients &&
           _pageController.page?.round() != next &&
@@ -239,9 +240,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPageChanged: _onPageChanged,
               children: [
                 for (final item in navItems)
-                  MediaQuery(
-                    data: mediaQuery,
-                    child: _KeepAlivePage(child: item.screen),
+                  _KeepAlivePage(
+                    key: ValueKey<String>('nav:${item.label}'),
+                    child: MediaQuery(data: mediaQuery, child: item.screen),
                   ),
               ],
             ),
@@ -260,7 +261,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _KeepAlivePage extends StatefulWidget {
-  const _KeepAlivePage({required this.child});
+  const _KeepAlivePage({required Key key, required this.child})
+    : super(key: key);
 
   final Widget child;
 
