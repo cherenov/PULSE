@@ -24,8 +24,14 @@ class _IndicatorWarningCardState extends State<IndicatorWarningCard> {
     }
 
     final background = assessment.isCritical
-        ? const Color(0xFF302021)
-        : const Color(0xFF302A1D);
+        ? Color.alphaBlend(
+            AppColors.critical.withValues(alpha: 0.14),
+            AppColors.background,
+          )
+        : Color.alphaBlend(
+            AppColors.caution.withValues(alpha: 0.12),
+            AppColors.background,
+          );
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),

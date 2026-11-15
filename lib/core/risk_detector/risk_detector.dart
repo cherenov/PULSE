@@ -1,4 +1,3 @@
-// lib/core/services/risk_detector.dart
 
 enum RiskSeverity { none, suspicion, confirmed }
 
@@ -20,14 +19,13 @@ class RiskDetector {
   static List<HealthRisk> detect(Map<String, List<double?>> latestValues) {
     final List<HealthRisk> risks = [];
 
-    // Допоміжні функції читання
     double? getVal(String id, [int index = 0]) {
       final vals = latestValues[id];
       if (vals == null || index >= vals.length) return null;
       return vals[index];
     }
 
-    // 1. Аритмія (Arrhythmia)
+    // 1. Arrhythmia
     final hrv = getVal('hrv_sdnn');
     final k = getVal('potassium');
     final mg = getVal('magnesium');
@@ -65,7 +63,7 @@ class RiskDetector {
       );
     }
 
-    // 2. Втрата кісткової маси (Bone Loss)
+    // 2. Bone loss
     final uCa = getVal('urine_calcium');
     final ntx = getVal('ntx_ctx');
     final ost = getVal('osteocalcin');
@@ -125,7 +123,7 @@ class RiskDetector {
       );
     }
 
-    // 4. М'язова атрофія (Muscle Atrophy)
+    // 4. Muscle atrophy
     final cpk = getVal('cpk');
     final cort = getVal('cortisol_am');
 

@@ -300,7 +300,7 @@ const metrics = [
     ],
     [
       [null, 15.0],
-    ], // Зростання у 3 рази
+    ], // 3x baseline
     MetricGroup.blood,
   ),
   MetricDef(
@@ -317,7 +317,7 @@ const metrics = [
     ],
     [
       [null, 24.0],
-    ], // Зростання у 3 рази
+    ], // 3x baseline
     MetricGroup.blood,
   ),
   MetricDef(
@@ -441,7 +441,7 @@ const metrics = [
     ],
     [
       [null, 120],
-    ], // +100% від норми
+    ], // +100% of normal
     MetricGroup.urine,
   ),
 

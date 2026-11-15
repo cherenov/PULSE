@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pulse/common/widgets/pulse_logo.dart';
 import 'package:pulse/core/database/db.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
@@ -97,26 +98,7 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.monitor_heart_outlined,
-                        color: AppColors.textPrimary,
-                        size: 35,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'PULSE',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: 3,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const PulseLogo(height: 30),
                   DebugRisksList(),
                   const SizedBox(height: 8),
                   Wrap(

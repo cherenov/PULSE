@@ -50,7 +50,6 @@ class IndicatorDetailScreen extends ConsumerWidget {
         ),
       ),
 
-      // Один прокручуваний екран.
       body: CustomScrollView(
         slivers: [
           SliverPadding(
@@ -82,7 +81,6 @@ class IndicatorDetailScreen extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  // Останній запис і попередження.
                   latestAsync.when(
                     loading: () => const SizedBox(
                       height: 120,
@@ -128,7 +126,6 @@ class IndicatorDetailScreen extends ConsumerWidget {
 
                   const SizedBox(height: 22),
 
-                  // Універсальний графік.
                   IndicatorChart(key: ValueKey(metric.id), metric: metric),
 
                   const SizedBox(height: 28),
@@ -156,7 +153,6 @@ class IndicatorDetailScreen extends ConsumerWidget {
             ),
           ),
 
-          // Історія завантажується окремо.
           historyAsync.when(
             loading: () => const SliverToBoxAdapter(
               child: Center(

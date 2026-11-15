@@ -12,7 +12,7 @@ class FloatingBottomNavBar extends StatelessWidget {
     this.onDestinationLongPress,
     this.backgroundColor,
     this.selectedIconColor = AppColors.accent,
-    this.unselectedIconColor = Colors.grey,
+    this.unselectedIconColor = AppColors.textDisabled,
     this.width = 280,
     this.height = 64,
   });
@@ -38,7 +38,8 @@ class FloatingBottomNavBar extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: backgroundColor ?? const Color(0xFF262727),
+            color: backgroundColor ?? AppColors.surfaceHigh,
+            border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(50),
           ),
           child: Row(

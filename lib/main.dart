@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pulse/home_screen.dart';
+import 'package:pulse/features/splash/splash_screen.dart';
 import 'package:pulse/theme/theme.dart';
 
 void main() {
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: theme,
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }

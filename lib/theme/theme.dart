@@ -10,7 +10,8 @@ final theme = ThemeData.dark().copyWith(
   colorScheme: const ColorScheme.dark(
     primary: AppColors.accent,
     onPrimary: AppColors.onAccent,
-    secondary: AppColors.sleep,
+    secondary: AppColors.textSecondary,
+    onSecondary: AppColors.onAccent,
     error: AppColors.critical,
     surface: AppColors.surface,
     onSurface: AppColors.textPrimary,
@@ -80,12 +81,12 @@ final theme = ThemeData.dark().copyWith(
   switchTheme: SwitchThemeData(
     trackColor: WidgetStateProperty.resolveWith(
       (states) => states.contains(WidgetState.selected)
-          ? AppColors.accentDim
+          ? AppColors.accent
           : AppColors.border,
     ),
     thumbColor: WidgetStateProperty.resolveWith(
       (states) => states.contains(WidgetState.selected)
-          ? AppColors.accent
+          ? AppColors.onAccent
           : AppColors.textSecondary,
     ),
   ),

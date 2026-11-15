@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pulse/common/widgets/pulse_logo.dart';
 import 'package:pulse/features/settings/about_pulse_screen.dart';
 import 'package:pulse/features/settings/orbital_run_screen.dart';
 import 'package:pulse/theme/app_colors.dart';
@@ -25,32 +26,10 @@ class SettingsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // PULSE logo
-                  const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.monitor_heart_outlined,
-                        color: AppColors.textPrimary,
-                        size: 36,
-                      ),
-                      SizedBox(width: AppSizes.sm),
-                      Text(
-                        'PULSE',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: 3,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const PulseLogo(height: 30),
 
                   const SizedBox(height: 42),
 
-                  // Page heading
                   const Text(
                     'Settings',
                     style: TextStyle(
@@ -70,12 +49,10 @@ class SettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.xxl),
 
-                  // Astronaut profile
                   const _ProfileCard(),
 
                   const SizedBox(height: AppSizes.md),
 
-                  // Profile-related settings
                   const _SettingsCard(
                     children: [
                       _SettingsRow(
@@ -94,7 +71,6 @@ class SettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.xxl),
 
-                  // Off-duty heading
                   const Text(
                     'Off-duty',
                     style: TextStyle(
@@ -106,7 +82,6 @@ class SettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.sm),
 
-                  // Off-duty arcade break
                   _SettingsCard(
                     children: [
                       _SettingsRow(
@@ -142,7 +117,6 @@ class SettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.xxl),
 
-                  // App settings heading
                   const Text(
                     'App settings',
                     style: TextStyle(
@@ -154,7 +128,6 @@ class SettingsScreen extends StatelessWidget {
 
                   const SizedBox(height: AppSizes.sm),
 
-                  // App settings card
                   _SettingsCard(
                     children: [
                       const _SettingsRow(
@@ -205,10 +178,6 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-// -----------------------------------
-// Astronaut profile card
-// -----------------------------------
-
 class _ProfileCard extends StatelessWidget {
   const _ProfileCard();
 
@@ -224,7 +193,6 @@ class _ProfileCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Temporary astronaut avatar
           Container(
             width: 80,
             height: 90,
@@ -275,7 +243,6 @@ class _ProfileCard extends StatelessWidget {
 
           const SizedBox(width: AppSizes.sm),
 
-          // Switch profile button
           OutlinedButton(
             onPressed: () {},
             style: OutlinedButton.styleFrom(
@@ -308,10 +275,6 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-// -----------------------------------
-// Rounded settings card
-// -----------------------------------
-
 class _SettingsCard extends StatelessWidget {
   final List<Widget> children;
 
@@ -333,10 +296,6 @@ class _SettingsCard extends StatelessWidget {
     );
   }
 }
-
-// -----------------------------------
-// Settings row
-// -----------------------------------
 
 class _SettingsRow extends StatelessWidget {
   final IconData icon;
@@ -421,10 +380,6 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
-// -----------------------------------
-// Divider between rows
-// -----------------------------------
-
 class _SettingsDivider extends StatelessWidget {
   const _SettingsDivider();
 
@@ -439,10 +394,6 @@ class _SettingsDivider extends StatelessWidget {
     );
   }
 }
-
-// -----------------------------------
-// Working Notifications switch
-// -----------------------------------
 
 class NotificationSwitch extends StatefulWidget {
   const NotificationSwitch({super.key});
@@ -459,15 +410,12 @@ class _NotificationSwitchState extends State<NotificationSwitch> {
     return Switch(
       value: notificationsEnabled,
 
-      // Enabled colors
       activeTrackColor: AppColors.accent,
-      activeThumbColor: AppColors.textPrimary,
+      activeThumbColor: AppColors.onAccent,
 
-      // Disabled colors
       inactiveTrackColor: AppColors.border,
       inactiveThumbColor: AppColors.textSecondary,
 
-      // Change state on tap
       onChanged: (bool value) {
         setState(() {
           notificationsEnabled = value;

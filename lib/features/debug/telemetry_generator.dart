@@ -69,14 +69,13 @@ class TelemetryGenerator {
     final result = <DateTime, List<double>>{};
     final fieldCount = metric.fields.length;
 
-    // Текущие значения для плавного движения
     final currentValues = List<double>.generate(fieldCount, (i) {
       final nMin = metric.normal[i][0] ?? metric.limits[i][0];
       final nMax = metric.normal[i][1] ?? metric.limits[i][1];
       return (nMin + nMax) / 2;
     });
 
-    // Текущая фаза (эпизод) длится несколько замеров подряд, чтобы не было одиночных "иголок"
+    // Each status episode spans several consecutive points to avoid single-point spikes.
     MetricStatus episodeStatus = MetricStatus.ok;
     int episodeStepsLeft = 0;
     int anomalyFieldIdx = 0;
@@ -87,13 +86,13 @@ class TelemetryGenerator {
         final roll = _random.nextDouble();
         if (roll < criticalChance) {
           episodeStatus = MetricStatus.critical;
-          episodeStepsLeft = 2 + _random.nextInt(3); // 2-4 точки подряд
+          episodeStepsLeft = 2 + _random.nextInt(3);
         } else if (roll < criticalChance + warningChance) {
           episodeStatus = MetricStatus.warning;
-          episodeStepsLeft = 3 + _random.nextInt(4); // 3-6 точек подряд
+          episodeStepsLeft = 3 + _random.nextInt(4);
         } else {
           episodeStatus = MetricStatus.ok;
-          episodeStepsLeft = 4 + _random.nextInt(8); // 4-11 точек нормы
+          episodeStepsLeft = 4 + _random.nextInt(8);
         }
         anomalyFieldIdx = _random.nextInt(fieldCount);
         goHigh = _random.nextBool();
@@ -113,7 +112,7 @@ class TelemetryGenerator {
           preferHigh: goHigh,
         );
 
-        // Плавная инерция (60% старого значения + 40% нового целевого + лёгкий шум)
+        // Inertia: blend with the previous value so the series moves smoothly.
         final smoothed = currentValues[f] * 0.55 + targetValue * 0.45;
         final finalValue = _clampAndRound(metric, f, smoothed);
 
@@ -143,7 +142,6 @@ class TelemetryGenerator {
     final normSpan = max((normMax - normMin).abs(), 0.001);
 
     if (targetStatus == MetricStatus.ok) {
-      // Колебания в центральной части нормы (с отступом 10% от краёв)
       final innerMin = normMin + normSpan * 0.1;
       final innerMax = normMax - normSpan * 0.1;
       return _lerp(innerMin, innerMax);
@@ -159,13 +157,13 @@ class TelemetryGenerator {
       if (hasLowWarn) {
         return _lerp(critMin, normMin - (normMin - critMin) * 0.15);
       }
-      // Если отдельной warning-зоны нет (как у Troponin 0..0.04 -> crit > 0.04),
-      // держим значение у самой верхней границы нормы без улёта в critical
+      // No separate warning band (e.g. Troponin: normal 0..0.04, critical > 0.04):
+      // stay near the top of the normal range without crossing into critical.
       return _lerp(normMin + normSpan * 0.75, normMax);
     }
 
-    // MetricStatus.critical — ограничиваем потолок выброса (макс +60% от ширины нормы),
-    // чтобы не улетать в 10.0 при норме 0.04 и не сплющивать график
+    // Critical: cap the excursion (max +60% of the normal span) so tiny ranges
+    // like 0.04 do not shoot to the limit and flatten the chart.
     final hasLowCrit = critMin != null && critMin > limitMin;
     final hasHighCrit = critMax != null && limitMax > critMax;
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:pulse/common/widgets/pulse_logo.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/theme/app_colors.dart';
 import 'package:pulse/theme/sizes.dart';
@@ -296,49 +297,15 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Icon(
-                  Icons.monitor_heart_outlined,
-                  color: AppColors.accent,
-                  size: 34,
-                ),
-              ),
-              const SizedBox(width: AppSizes.md),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'PULSE',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        fontStyle: FontStyle.italic,
-                        letterSpacing: 3,
-                      ),
-                    ),
-                    SizedBox(height: AppSizes.xs),
-                    Text(
-                      'Personal Unit for Health and Life Evaluation',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const PulseLogo(height: 30),
+          const SizedBox(height: AppSizes.md),
+          const Text(
+            'Personal Unit for Health and Life Evaluation',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: AppSizes.xl),
           Text(
@@ -460,7 +427,7 @@ class _FeatureGrid extends StatelessWidget {
     ),
     (
       icon: Icons.accessibility_new_rounded,
-      color: AppColors.caution,
+      color: AppColors.textPrimary,
       title: 'Bone & muscle',
       body: 'Bone turnover, muscle stress and recovery signals.',
     ),
@@ -530,7 +497,7 @@ class _FeatureTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -542,22 +509,29 @@ class _FeatureTile extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: AppSizes.md),
-          Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppSizes.xs),
-          Text(
-            body,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              height: 1.45,
+          const SizedBox(width: AppSizes.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.xs),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

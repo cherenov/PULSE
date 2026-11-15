@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pulse/common/widgets/pulse_logo.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/core/tts/status_announcer.dart';
 import 'package:pulse/core/tts/tts_provider.dart';
+import 'package:pulse/theme/app_colors.dart';
 
 extension on MetricGroup {
   String get label => switch (this) {
@@ -30,10 +32,10 @@ class AddRecordScreen extends ConsumerStatefulWidget {
 }
 
 class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
-  static const _bg = Color(0xFF111116);
-  static const _card = Color(0xFF1A1A20);
-  static const _field = Color(0xFF24242B);
-  static const _accent = Color(0xFFB8E36E);
+  static const _bg = AppColors.background;
+  static const _card = AppColors.surface;
+  static const _field = AppColors.surfaceHigh;
+  static const _accent = AppColors.accent;
 
   static final _groups = MetricGroup.values
       .where((g) => metrics.any((m) => m.group == g))
@@ -154,9 +156,8 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
             ),
           );
       setState(_resetFields);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved: ${status.name}')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Saved: ${status.name}')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -174,9 +175,10 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
+            color: _field,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: error == null ? Colors.white24 : Colors.redAccent,
+              color: error == null ? Colors.white24 : AppColors.critical,
             ),
           ),
           child: Row(
@@ -201,6 +203,7 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
                     labelStyle: const TextStyle(color: Colors.white54),
                     hintText: 0.toStringAsFixed(_def.decimals),
                     hintStyle: const TextStyle(color: Colors.white24),
+                    filled: false,
                     border: InputBorder.none,
                   ),
                 ),
@@ -217,7 +220,7 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
             padding: const EdgeInsets.only(left: 8, top: 6),
             child: Text(
               error,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+              style: const TextStyle(color: AppColors.critical, fontSize: 13),
             ),
           ),
       ],
@@ -233,16 +236,10 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
           children: [
             const Padding(
-              padding: EdgeInsets.only(left: 8, bottom: 28),
-              child: Text(
-                'PULSE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  fontStyle: FontStyle.italic,
-                  letterSpacing: 2,
-                ),
+              padding: EdgeInsets.only(left: 8, top: 12, bottom: 28),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: PulseLogo(height: 30),
               ),
             ),
             _LabeledCard(
@@ -264,7 +261,7 @@ class _AddMetricsScreenState extends ConsumerState<AddRecordScreen> {
                 labelOf: (m) => m.title,
                 iconOf: (_) => const Icon(
                   Icons.science_outlined,
-                  color: Color(0xFFF2C14E),
+                  color: AppColors.textSecondary,
                 ),
                 onChanged: _setMetric,
               ),
@@ -377,7 +374,7 @@ class _LabeledCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A20),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white12),
       ),
@@ -415,14 +412,14 @@ class _Dropdown<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF24242B),
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(14),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          dropdownColor: const Color(0xFF24242B),
+          dropdownColor: AppColors.surfaceHigh,
           icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
           style: const TextStyle(
             color: Colors.white,

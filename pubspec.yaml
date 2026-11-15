@@ -35,25 +35,24 @@ flutter:
   uses-material-design: true
   assets:
     - assets/app-logo.jpg
+    - assets/brand/
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/app-logo.jpg"
   remove_alpha_ios: true
-  # Для адаптивной иконки Android (чтобы логотип не обрезался и выглядел аккуратно)
-  adaptive_icon_background: "#0D1117" # тёмный фоновый цвет приложения
+  adaptive_icon_background: "#000000"
   adaptive_icon_foreground: "assets/app-logo.jpg"
 
 flutter_native_splash:
-  # Фон совпадает с чёрным фоном логотипа, чтобы не было видимой рамки
   color: "#000000"
-  image: "assets/app-logo.jpg"
+  image: "assets/brand/splash_android12.png"
   android: true
   ios: true
   web: false
   android_12:
-    # Android 12+ обрезает иконку по кругу (~2/3 размера) — используем версию с отступами
-    image: "assets/app-logo-splash-android12.png"
+    # Android 12+ masks the icon to a circle; this asset is padded to fit.
+    image: "assets/brand/splash_android12.png"
     color: "#000000"
     icon_background_color: "#000000"
