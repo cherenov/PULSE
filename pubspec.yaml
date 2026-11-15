@@ -40,10 +40,15 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/app-logo.jpg"
+  image_path: "assets/app-logo-1024.png"
   remove_alpha_ios: true
   adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "assets/app-logo.jpg"
+  adaptive_icon_foreground: "assets/app-logo-1024.png"
+  web:
+    generate: true
+    image_path: "assets/app-logo-1024.png"
+    background_color: "#000000"
+    theme_color: "#000000"
 
 flutter_native_splash:
   color: "#000000"

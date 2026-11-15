@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:developer' as dev;
 
 import 'package:flutter_tts/flutter_tts.dart';
@@ -22,7 +22,7 @@ class TtsService {
       await _tts.setSpeechRate(_defaultSpeechRate);
       await _tts.setPitch(1);
 
-      if (Platform.isIOS) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
         await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
           IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
           IosTextToSpeechAudioCategoryOptions.mixWithOthers,
