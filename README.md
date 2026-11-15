@@ -10,6 +10,7 @@
 - **100% Offline Architecture**: Zero cloud dependencies to ensure operational reliability during deep-space communications blackouts.
 - **Voice Feedback Engine**: Instant offline speech feedback integrated via Riverpod for critical notifications, alerts, and navigation actions.
 - **Local Telemetry Store**: On-device SQLite measurements via Drift, with dashboard stats, indicator history, and a risk detector over blood, urine, tracker, and eye-health biomarkers.
+- **Sensor-ready telemetry (alpha)**: Designed to ingest live readings from connected sensors. Automatic collection is currently under testing; manual entry remains available as a fallback and for development.
 
 ---
 
@@ -37,9 +38,62 @@ lib/
 │   ├── add_metrics/
 │   ├── dashboard/
 │   ├── debug/
-│   └── indicators/
+│   ├── indicators/
+│   └── settings/       # Profile, preferences and About PULSE
 └── theme/              # Colors, sizes, and Material theme
 ```
+
+---
+
+## Data Input Status
+
+PULSE is designed to receive telemetry from connected sensors, for example over MQTT or Bluetooth depending on the mission configuration. Automatic sensor ingestion is currently **alpha/planned** and remains under testing.
+
+In the current build:
+
+- **Add record** handles manual readings and is primarily intended for fallback and development/debug scenarios.
+- **Debug mode** generates synthetic telemetry so dashboards, charts, risk detection and voice feedback can be exercised without sensor hardware.
+
+---
+
+## Debug Mode (Development Only)
+
+The Debug tab is hidden by default and is not persisted across app restarts.
+
+### Unlock and hide
+
+- Tap **Settings** five times quickly. The tap counter resets after two seconds without a tap.
+- Long-press **Settings** to show or hide Debug mode. Unlocking opens the Debug tab; hiding it returns to Settings if Debug is open.
+
+### Random telemetry generator
+
+The **Random** button opens a dialog with these controls:
+
+| Control | Range | Default |
+| --- | --- | --- |
+| Period | 7–60 days | 30 days |
+| Warning chance | 0–60% | 15% |
+| Critical chance | 0–40% | 5% |
+| Clear existing data first | on/off | on |
+
+Readings are generated every **6 hours** for every registered metric. The generator creates smooth, episode-based anomalies:
+
+- normal episodes last 4–11 samples;
+- warning episodes last 3–6 samples;
+- critical episodes last 2–4 samples;
+- one field per episode carries the anomaly; other fields stay in their normal range;
+- values are smoothed, clamped to the metric's allowed limits, and rounded to the configured precision.
+
+Generation inserts a single batch for the active profile and reports the number of measurements created. At the current registry size, a 30-day run produces roughly 2,760 measurements.
+
+### Data tools
+
+- **Clear database** deletes all measurements for the active profile after confirmation. Profiles and settings are not removed.
+- The debug metric list shows total records and metric count, supports **Add Random** for a single synthetic measurement (or **Add First Measurement** when empty), and groups records by blood, urine, non-invasive and ocular metrics.
+- Each metric expands to show its records; values and timestamps can be edited, and records can be swiped left to delete.
+- The top of the screen lists **Confirmed clinical risks** and **Risk suspicions** produced by the latest values, with the metrics that triggered them.
+
+> Debug and generated data are for development and demonstration only. Never use synthetic or test readings for health decisions or mission planning.
 
 ---
 

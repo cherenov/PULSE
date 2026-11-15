@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pulse/features/settings/about_pulse_screen.dart';
 import 'package:pulse/theme/app_colors.dart';
 import 'package:pulse/theme/sizes.dart';
 
@@ -105,15 +106,15 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: AppSizes.sm),
 
                   // App settings card
-                  const _SettingsCard(
+                  _SettingsCard(
                     children: [
-                      _SettingsRow(
+                      const _SettingsRow(
                         icon: Icons.notifications_none_rounded,
                         title: 'Notifications',
                         trailing: NotificationSwitch(),
                       ),
-                      _SettingsDivider(),
-                      _SettingsRow(
+                      const _SettingsDivider(),
+                      const _SettingsRow(
                         icon: Icons.dark_mode_outlined,
                         title: 'Appearance',
                         trailing: Row(
@@ -131,13 +132,20 @@ class SettingsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      _SettingsDivider(),
+                      const _SettingsDivider(),
                       _SettingsRow(
                         icon: Icons.info_outline_rounded,
                         title: 'About PULSE',
+                        subtitle: 'Mission, health focus and credits',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AboutPulseScreen(),
+                          ),
+                        ),
                       ),
                     ],
                   ),
+                  SizedBox(height: 60),
                 ],
               ),
             ),
@@ -286,17 +294,19 @@ class _SettingsRow extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
   const _SettingsRow({
     required this.icon,
     required this.title,
     this.subtitle,
     this.trailing,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.lg,
         vertical: AppSizes.md,
@@ -345,6 +355,18 @@ class _SettingsRow extends StatelessWidget {
           trailing ??
               const Icon(Icons.chevron_right, color: AppColors.textSecondary),
         ],
+      ),
+    );
+
+    if (onTap == null) return content;
+
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: AppColors.accent.withValues(alpha: 0.08),
+        highlightColor: AppColors.accent.withValues(alpha: 0.04),
+        child: content,
       ),
     );
   }

@@ -18,42 +18,52 @@ class IndicatorSparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final values = records
-        .where((r) => r.values[0] != null)
-        .map((r) => r.values[0]!)
-        .toList();
-    if (values.length < 2) return const SizedBox.shrink();
+    if (records.isEmpty) return const SizedBox.shrink();
 
-    final recent = values.length > 16
-        ? values.sublist(values.length - 16)
-        : values;
+    final recent = records.length > 16
+        ? records.sublist(records.length - 16)
+        : records;
+    if (recent.length < 2) return const SizedBox.shrink();
+
+    final hasLine = List.generate(metric.fields.length, (index) {
+      var count = 0;
+      for (final record in recent) {
+        if (record.values[index] != null) count++;
+      }
+      return count >= 2;
+    }).any((hasLine) => hasLine);
+
+    if (!hasLine) return const SizedBox.shrink();
 
     return CustomPaint(
-      painter: SparklinePainter(
-        values: recent,
-        metric: metric,
-      ),
+      painter: SparklinePainter(metric: metric, records: recent),
       size: Size.infinite,
     );
   }
 }
 
 class SparklinePainter extends CustomPainter {
-  final List<double> values;
   final MetricDef metric;
+  final List<Measurement> records;
 
-  SparklinePainter({
-    required this.values,
-    required this.metric,
-  });
+  SparklinePainter({required this.metric, required this.records});
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (values.length < 2 || size.width <= 0 || size.height <= 0) return;
+    if (records.length < 2 || size.width <= 0 || size.height <= 0) return;
 
-    final normalMin = metric.normal[0][0];
-    final normalMax = metric.normal[0][1];
-    final allY = <double>[...values, ?normalMin, ?normalMax];
+    final activeField = _activeField();
+
+    final allValues = <double>[
+      for (var field = 0; field < metric.fields.length; field++)
+        for (final record in records)
+          if (record.values[field] != null) record.values[field]!,
+    ];
+    final normalMin = metric.normal[activeField][0];
+    final normalMax = metric.normal[activeField][1];
+    final allY = <double>[...allValues, ?normalMin, ?normalMax];
+    if (allY.isEmpty) return;
+
     final minY = allY.reduce(min);
     final maxY = allY.reduce(max);
     final span = maxY - minY;
@@ -61,11 +71,12 @@ class SparklinePainter extends CustomPainter {
     final lo = minY - pad;
     final hi = maxY + pad;
     final range = hi - lo;
+    final stepX = 1 / (records.length - 1);
 
-    Offset point(int i, double y) {
-      final x = i / (values.length - 1) * size.width;
-      final py = size.height - ((y - lo) / range) * size.height;
-      return Offset(x, py);
+    Offset point(int recordIndex, double value) {
+      final x = recordIndex * stepX * size.width;
+      final y = size.height - ((value - lo) / range) * size.height;
+      return Offset(x, y);
     }
 
     if (normalMin != null) {
@@ -75,35 +86,203 @@ class SparklinePainter extends CustomPainter {
       _drawDashedHLine(canvas, size, point(0, normalMax).dy);
     }
 
-    final cuts = <double>{
-      ...[?metric.critical[0][0], ?metric.critical[0][1]],
-      ...[?normalMin, ?normalMax],
-    }.toList()..sort();
-
     final paint = Paint()
-      ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..isAntiAlias = true;
+
+    for (var field = 0; field < metric.fields.length; field++) {
+      if (field == activeField) continue;
+
+      paint
+        ..color = AppColors.metricFields[field % AppColors.metricFields.length]
+            .withValues(alpha: 0.35)
+        ..strokeWidth = 1.1;
+      _drawPlainLine(canvas, field, point, paint);
+    }
+
+    paint
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    _drawZonedLine(canvas, activeField, size, point, paint);
+
+    final singlePoint = _singlePoint(activeField);
+    if (singlePoint != null) {
+      canvas.drawCircle(
+        point(singlePoint.index, singlePoint.value),
+        1.8,
+        Paint()
+          ..color = statusColor(
+            metric.fieldStatus(activeField, singlePoint.value),
+          )
+          ..isAntiAlias = true,
+      );
+    }
+  }
+
+  int _activeField() {
+    var bestIndex = 0;
+    var bestStatus = MetricStatus.ok;
+    var found = false;
+
+    for (var field = 0; field < metric.fields.length; field++) {
+      final value = _latestValue(field);
+      if (value == null) continue;
+
+      final status = metric.fieldStatus(field, value);
+      if (!found || status.index > bestStatus.index) {
+        bestIndex = field;
+        bestStatus = status;
+        found = true;
+      }
+    }
+
+    return bestIndex;
+  }
+
+  double? _latestValue(int field) {
+    double? value;
+    DateTime? latest;
+
+    for (final record in records) {
+      final next = record.values[field];
+      if (next == null) continue;
+
+      if (latest == null || record.takenAt.isAfter(latest)) {
+        value = next;
+        latest = record.takenAt;
+      }
+    }
+
+    return value;
+  }
+
+  _SparkPoint? _singlePoint(int field) {
+    _SparkPoint? result;
+    var count = 0;
+
+    for (var index = 0; index < records.length; index++) {
+      final value = records[index].values[field];
+      if (value == null) continue;
+
+      count++;
+      result = _SparkPoint(index: index, value: value);
+    }
+
+    return count == 1 ? result : null;
+  }
+
+  void _drawPlainLine(
+    Canvas canvas,
+    int field,
+    Offset Function(int, double) point,
+    Paint paint,
+  ) {
+    Path? path;
+    int? previousIndex;
+
+    void flush() {
+      if (path != null) canvas.drawPath(path!, paint);
+      path = null;
+    }
+
+    for (var index = 0; index < records.length; index++) {
+      final value = records[index].values[field];
+      if (value == null) {
+        flush();
+        previousIndex = null;
+        continue;
+      }
+
+      final next = point(index, value);
+      if (path == null || previousIndex == null || index - previousIndex != 1) {
+        flush();
+        path = Path()..moveTo(next.dx, next.dy);
+      } else {
+        path!.lineTo(next.dx, next.dy);
+      }
+      previousIndex = index;
+    }
+    flush();
+  }
+
+  void _drawZonedLine(
+    Canvas canvas,
+    int field,
+    Size size,
+    Offset Function(int, double) point,
+    Paint paint,
+  ) {
+    final cuts = <double>{
+      ...[?metric.critical[field][0], ?metric.critical[field][1]],
+      ...[?metric.normal[field][0], ?metric.normal[field][1]],
+    }.toList()..sort();
 
     var piece = <Offset>[];
     MetricStatus? pieceStatus;
 
     void flush() {
       if (piece.length > 1 && pieceStatus != null) {
-        paint.color = statusColor(pieceStatus!);
+        final status = pieceStatus!;
+        final color = statusColor(status);
         final path = Path()..moveTo(piece.first.dx, piece.first.dy);
         for (var i = 1; i < piece.length; i++) {
           path.lineTo(piece[i].dx, piece[i].dy);
         }
+
+        if (status != MetricStatus.ok) {
+          final area = Path.from(path)
+            ..lineTo(piece.last.dx, size.height)
+            ..lineTo(piece.first.dx, size.height)
+            ..close();
+          canvas.drawPath(
+            area,
+            Paint()
+              ..color = color.withValues(
+                alpha: status == MetricStatus.critical ? 0.16 : 0.10,
+              )
+              ..style = PaintingStyle.fill
+              ..isAntiAlias = true,
+          );
+        }
+
+        final strokeWidth = switch (status) {
+          MetricStatus.ok => 2.0,
+          MetricStatus.warning => 2.6,
+          MetricStatus.critical => 3.0,
+        };
+
+        if (status != MetricStatus.ok) {
+          final isCritical = status == MetricStatus.critical;
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = color.withValues(alpha: isCritical ? 0.75 : 0.55)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = strokeWidth + 1.6
+              ..strokeCap = StrokeCap.round
+              ..strokeJoin = StrokeJoin.round
+              ..maskFilter = MaskFilter.blur(
+                BlurStyle.normal,
+                isCritical ? 5.0 : 3.5,
+              )
+              ..isAntiAlias = true,
+          );
+        }
+
+        paint
+          ..color = color
+          ..strokeWidth = strokeWidth
+          ..maskFilter = null;
         canvas.drawPath(path, paint);
       }
       piece = [];
     }
 
-    void addSegment(Offset a, Offset b, double ya, double yb) {
-      final status = metric.fieldStatus(0, (ya + yb) / 2);
+    void add(Offset a, double ya, Offset b, double yb) {
+      final status = metric.fieldStatus(field, (ya + yb) / 2);
       if (status != pieceStatus) {
         flush();
         pieceStatus = status;
@@ -112,29 +291,49 @@ class SparklinePainter extends CustomPainter {
       piece.add(b);
     }
 
-    for (var i = 0; i < values.length - 1; i++) {
-      final ya = values[i];
-      final yb = values[i + 1];
-      final a = point(i, ya);
-      final b = point(i + 1, yb);
-      final loY = min(ya, yb);
-      final hiY = max(ya, yb);
-      final inside = cuts.where((c) => c > loY && c < hiY).toList();
-      final crossings = ya < yb ? inside : inside.reversed.toList();
+    double? previousValue;
+    int? previousIndex;
 
-      var from = a;
-      var fromY = ya;
-      for (final c in crossings) {
-        final t = (c - ya) / (yb - ya);
-        final mid = Offset(
-          a.dx + (b.dx - a.dx) * t,
-          a.dy + (b.dy - a.dy) * t,
-        );
-        addSegment(from, mid, fromY, c);
-        from = mid;
-        fromY = c;
+    for (var index = 0; index < records.length; index++) {
+      final value = records[index].values[field];
+      if (value == null) {
+        flush();
+        previousValue = null;
+        previousIndex = null;
+        continue;
       }
-      addSegment(from, b, fromY, yb);
+
+      if (previousValue == null ||
+          previousIndex == null ||
+          index - previousIndex != 1) {
+        flush();
+      } else {
+        final a = point(previousIndex, previousValue);
+        final b = point(index, value);
+        final loY = min(previousValue, value);
+        final hiY = max(previousValue, value);
+        final inside = cuts.where((c) => c > loY && c < hiY).toList();
+        final crossings = previousValue < value
+            ? inside
+            : inside.reversed.toList();
+
+        var from = a;
+        var fromY = previousValue;
+        for (final cut in crossings) {
+          final t = (cut - previousValue) / (value - previousValue);
+          final mid = Offset(
+            a.dx + (b.dx - a.dx) * t,
+            a.dy + (b.dy - a.dy) * t,
+          );
+          add(from, fromY, mid, cut);
+          from = mid;
+          fromY = cut;
+        }
+        add(from, fromY, b, value);
+      }
+
+      previousValue = value;
+      previousIndex = index;
     }
     flush();
   }
@@ -161,15 +360,29 @@ class SparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant SparklinePainter oldDelegate) {
     return oldDelegate.metric.id != metric.id ||
-        oldDelegate.values.length != values.length ||
-        !_listEquals(oldDelegate.values, values);
+        !_recordsEqual(oldDelegate.records, records);
   }
 
-  bool _listEquals(List<double> a, List<double> b) {
+  bool _recordsEqual(List<Measurement> a, List<Measurement> b) {
     if (a.length != b.length) return false;
+
     for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
+      if (a[i].takenAt != b[i].takenAt) return false;
+
+      final av = a[i].values;
+      final bv = b[i].values;
+      for (var j = 0; j < av.length; j++) {
+        if (av[j] != bv[j]) return false;
+      }
     }
+
     return true;
   }
+}
+
+class _SparkPoint {
+  const _SparkPoint({required this.index, required this.value});
+
+  final int index;
+  final double value;
 }

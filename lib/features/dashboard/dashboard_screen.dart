@@ -4,6 +4,7 @@ import 'package:pulse/core/database/db.dart';
 import 'package:pulse/core/database/db_providers.dart';
 import 'package:pulse/core/database/metrics_registory.dart';
 import 'package:pulse/features/dashboard/widgets/health_category_card.dart';
+import 'package:pulse/features/debug/widgets/debug_risks_list.dart';
 import 'package:pulse/features/indicators/indicator_group_screen.dart';
 import 'package:pulse/home_screen.dart';
 import 'package:pulse/theme/app_colors.dart';
@@ -114,7 +115,8 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 48),
+                  DebugRisksList(),
+                  const SizedBox(height: 8),
                   Wrap(
                     spacing: spacing,
                     runSpacing: spacing,

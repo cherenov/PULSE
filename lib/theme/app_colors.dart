@@ -20,6 +20,13 @@ class AppColors {
   static const critical = Color(0xFFE5646E);
   static const info = Color(0xFF7AB8F5);
 
+  static const metricFields = <Color>[
+    Color(0xFF7AB8F5),
+    Color(0xFFA78BFA),
+    Color(0xFF2DD4BF),
+    Color(0xFFF472B6),
+  ];
+
   static const heartRate = Color(0xFFE5646E);
   static const spo2 = Color(0xFF7AB8F5);
   static const respiration = Color(0xFF2DD4BF);
