@@ -1,0 +1,6 @@
+/sqlite3.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=86400
+
+/*.js
+  Cache-Control: no-cache

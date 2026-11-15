@@ -1,12 +1,23 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pulse/core/database/db_tables.dart';
+import 'package:pulse/features/debug/telemetry_generator.dart';
 
 part 'db.g.dart';
 
 @DriftDatabase(tables: [Profiles, ProfileSettings, Measurements])
 class Db extends _$Db {
-  Db() : super(driftDatabase(name: 'telemetry'));
+  Db()
+    : super(
+        driftDatabase(
+          name: 'telemetry',
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          ),
+        ),
+      );
 
   @override
   int get schemaVersion => 1;
@@ -18,7 +29,19 @@ class Db extends _$Db {
       await into(profiles)
           .insert(ProfilesCompanion.insert(name: 'Astronaut 1'));
     },
-    beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+      // Web demo build: seed a fresh browser database with synthetic
+      // telemetry so visitors see a populated dashboard immediately.
+      if (kIsWeb && details.wasCreated) {
+        final profile = await select(profiles).getSingle();
+        await TelemetryGenerator().generateForAllMetrics(
+          db: this,
+          profileId: profile.id,
+          days: 90,
+        );
+      }
+    },
   );
 
   Future<int> addMeasurement(
